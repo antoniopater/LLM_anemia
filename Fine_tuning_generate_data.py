@@ -1,212 +1,126 @@
-import json
-import random
+import numpy as np
+import pandas as pd
 
-def generate_age():
-    return random.randint(20, 80)
+# Liczba próbek
+n_samples = 1000
 
-def generate_gender():
-    return random.choice(["Pacjent", "Pacjentka"])
 
-def generate_lab_value(param, trend):
-    if trend == "↓":
-        return f"{param}: {round(random.uniform(0.5, 0.9), 2)}"  # Wartości poniżej normy
-    elif trend == "↑":
-        return f"{param}: {round(random.uniform(1.1, 1.5), 2)}"  # Wartości powyżej normy
-    else:
-        return f"{param}: {round(random.uniform(0.9, 1.1), 2)}"  # Wartości w normie
+def generate_normal_values(n):
+    # Generowanie wartości dla parametrów krwi z użyciem rozkładów normalnych i ograniczeń
+    WBC = np.clip(np.random.normal(loc=7.5, scale=1.5, size=n), 4, 11)
 
-def generate_text_style(text):
-    styles = [
-        lambda t: t,  # Standardowy styl
-        lambda t: t.replace(".", ";"),  # Użycie średników zamiast kropek
-        lambda t: t.upper(),  # Wszystkie litery wielkie
-        lambda t: t.replace(",", " ,")  # Dodanie spacji przed przecinkami
-    ]
-    style = random.choice(styles)
-    return style(text)
+    NEUT = np.clip(np.random.normal(loc=4, scale=1, size=n), 2, 7)
+    LYMPH = np.clip(np.random.normal(loc=2.5, scale=0.5, size=n), 1, 4)
+    ALY = np.clip(np.random.normal(loc=0.5, scale=0.2, size=n), 0.2, 1)
+    ASLY = np.clip(np.random.normal(loc=0.5, scale=0.2, size=n), 0.2, 1)
+    MONO = np.clip(np.random.normal(loc=0.5, scale=0.1, size=n), 0.3, 1)
+    EOS = np.clip(np.random.normal(loc=0.1, scale=0.05, size=n), 0.05, 0.3)
+    BASO = np.clip(np.random.normal(loc=0.1, scale=0.05, size=n), 0.05, 0.3)
 
-def generate_microcytic_example(idx):
-    age = generate_age()
-    gender = generate_gender()
-    lab_results = [
-        generate_lab_value("RBC", "↓"),
-        generate_lab_value("HGB", "↓"),
-        generate_lab_value("HCT", "↓"),
-        generate_lab_value("MCV", "↓"),
-        generate_lab_value("MCH", "↓"),
-        generate_lab_value("MCHC", "↓"),
-        generate_lab_value("RDW", "↑"),
-        "Mikrocyty: ↑",
-        generate_lab_value("PLT", "↑")
-    ]
-    base_text = (f"{gender}, {age} lat, z objawami zmęczenia i osłabienia. "
-                 f"Badania laboratoryjne (przykład {idx}): {', '.join(lab_results)}.")
-    styled_text = generate_text_style(base_text)
-    return {"input_text": styled_text, "label": "microcytic"}
+    # Procentowe udziały
+    NEUT_perc = np.clip((NEUT / WBC) * 100 + np.random.normal(0, 2, n), 40, 80)
+    LYMPH_perc = np.clip((LYMPH / WBC) * 100 + np.random.normal(0, 2, n), 15, 40)
+    ALY_perc = np.clip((ALY / WBC) * 100 + np.random.normal(0, 1, n), 5, 15)
+    ASLY_perc = np.clip((ASLY / WBC) * 100 + np.random.normal(0, 1, n), 5, 15)
+    MONO_perc = np.clip((MONO / WBC) * 100 + np.random.normal(0, 1, n), 2, 10)
+    EOS_perc = np.clip((EOS / WBC) * 100 + np.random.normal(0, 1, n), 0.5, 5)
+    BASO_perc = np.clip((BASO / WBC) * 100 + np.random.normal(0, 1, n), 0.5, 5)
 
-def generate_macrocytic_example(idx):
-    age = generate_age()
-    gender = generate_gender()
-    lab_results = [
-        generate_lab_value("RBC", "↓"),
-        generate_lab_value("HGB", "↓"),
-        generate_lab_value("HCT", "↓"),
-        generate_lab_value("MCV", "↑"),
-        generate_lab_value("MCH", "↑"),
-        generate_lab_value("MCHC", "N"),
-        generate_lab_value("RDW", "↑"),
-        "Makrocyty: ↑",
-        generate_lab_value("PLT", "↓"),
-        generate_lab_value("NRBC", "↑"),
-        generate_lab_value("NEUT#", "↓")
-    ]
-    base_text = (f"{gender}, {age} lat, z objawami neuropatii i zaburzeniami pamięci. "
-                 f"Wyniki badań (przykład {idx}): {', '.join(lab_results)}.")
-    styled_text = generate_text_style(base_text)
-    return {"input_text": styled_text, "label": "macrocytic"}
+    # NEUT-GI i NEUT-RI – parametry kategoryczne
+    NEUT_GI = np.random.choice([0, 1], size=n)
+    NEUT_RI = np.random.choice([0, 1], size=n)
 
-def generate_normocytic_example(idx):
-    age = generate_age()
-    gender = generate_gender()
-    lab_results = [
-        generate_lab_value("RBC", "↓"),
-        generate_lab_value("HGB", "↓"),
-        generate_lab_value("HCT", "↓"),
-        generate_lab_value("MCV", "N"),
-        generate_lab_value("MCH", "N"),
-        generate_lab_value("MCHC", "N"),
-        generate_lab_value("RDW", "↑"),
-        generate_lab_value("NRBC", "↑"),
-        generate_lab_value("Retikulocyty", "↑"),
-        generate_lab_value("WBC", "↑"),
-        generate_lab_value("NEUT#", "↑"),
-        generate_lab_value("PLT", "↑")
-    ]
-    base_text = (f"{gender}, {age} lat, z przewlekłymi stanami zapalnymi i ogólnym osłabieniem. "
-                 f"Badania laboratoryjne (przykład {idx}): {', '.join(lab_results)}.")
-    styled_text = generate_text_style(base_text)
-    return {"input_text": styled_text, "label": "normocytic"}
+    # Parametry erytrocytów
+    RBC = np.clip(np.random.normal(loc=5, scale=0.5, size=n), 4, 6)
+    HGB = np.clip(np.random.normal(loc=15, scale=1.5, size=n), 12, 17)
+    HCT = HGB * 3  # uproszczone przeliczenie hematokrytu
+    MCV = np.clip(np.random.normal(loc=90, scale=5, size=n), 80, 100)
+    MCH = np.clip(np.random.normal(loc=30, scale=2, size=n), 25, 35)
+    MCHC = np.clip(np.random.normal(loc=34, scale=1, size=n), 32, 36)
+    RDW_SD = np.clip(np.random.normal(loc=42, scale=2, size=n), 39, 46)
+    RDW_CV = np.clip(np.random.normal(loc=13, scale=1, size=n), 11.5, 14.5)
 
-sample_examples = []
+    # Parametry wielkości erytrocytów (procentowo)
+    Mikrocyty = np.random.uniform(0, 2, n)
+    Makrocyty = np.random.uniform(0, 2, n)
 
-# Generujemy 500 przykładów dla każdej kategorii
-for i in range(1, 501):
-    sample_examples.append(generate_microcytic_example(i))
-for i in range(1, 501):
-    sample_examples.append(generate_macrocytic_example(i))
-for i in range(1, 501):
-    sample_examples.append(generate_normocytic_example(i))
+    # Erytroblasty
+    NRBC = np.clip(np.random.normal(loc=0.05, scale=0.03, size=n), 0, 0.1)
+    NRBC_perc = np.clip(np.random.normal(loc=0.05, scale=0.03, size=n), 0, 0.1)
 
-# Tworzymy finalną strukturę JSON
-data = {
-    "fine_tuning_data": {
-        "parameters": [
-            {
-                "name": "WBC",
-                "description": "Liczba białych krwinek w krwi, odpowiadają za odporność organizmu.",
-                "unit": "x10^3/μL"
-            },
-            {
-                "name": "NEUT#",
-                "description": "Liczba neutrofili, czyli granulocytów odpowiedzialnych za walkę z infekcjami bakteryjnymi.",
-                "unit": "x10^3/μL"
-            },
-            # ... (pozostałe definicje parametrów)
-        ],
-        "advanced_medical_knowledge": {
-            "anemia": {
-                "microcytic": {
-                    "description": "Anemia mikrocytarna, często związana z niedoborem żelaza lub talasemią.",
-                    "key_features": {
-                        "RBC": "↓ lub N (w talasemii może być N lub nawet ↑)",
-                        "HGB": "↓",
-                        "HCT": "↓",
-                        "MCV": "↓",
-                        "MCH": "↓",
-                        "MCHC": "↓",
-                        "RDW-SD_RDW-CV": "↑ (w niedoborze żelaza), N (w talasemii)",
-                        "Mikrocyty": "↑",
-                        "PLT": "często ↑",
-                        "WBC": "zazwyczaj N",
-                        "NEUT-GI_NEUT-RI": "zazwyczaj N"
-                    }
-                },
-                "macrocytic": {
-                    "description": "Anemia makrocytarna, najczęściej związana z niedoborem witaminy B12, kwasu foliowego lub chorobami wątroby.",
-                    "key_features": {
-                        "RBC": "↓",
-                        "HGB": "↓",
-                        "HCT": "↓",
-                        "MCV": "↑",
-                        "MCH": "↑",
-                        "MCHC": "N",
-                        "RDW-SD_RDW-CV": "↑",
-                        "Makrocyty": "↑",
-                        "PLT": "↓ (zwłaszcza w niedoborze B12)",
-                        "NRBC#_NRBC%": "może być ↑ (w zaawansowanych przypadkach)",
-                        "NEUT#": "może być ↓",
-                        "NEUT-GI_NEUT-RI": "często ↓"
-                    }
-                },
-                "normocytic": {
-                    "description": "Anemia normocytarna, typowa dla anemii chorób przewlekłych lub hemolitycznej.",
-                    "key_features": {
-                        "RBC": "↓",
-                        "HGB": "↓",
-                        "HCT": "↓",
-                        "MCV": "N",
-                        "MCH": "N",
-                        "MCHC": "N",
-                        "RDW-SD_RDW-CV": "↑ (w anemii hemolitycznej)",
-                        "NRBC#_NRBC%": "↑ (w nasilonej hemolizie)",
-                        "Retikulocyty": "↑ w hemolizie, ↓ w anemii przewlekłej",
-                        "WBC": "może być ↑ w stanach zapalnych",
-                        "NEUT#": "może być ↑ w anemii przewlekłej",
-                        "PLT": "może być ↑ w przewlekłych stanach zapalnych"
-                    }
-                }
-            }
-        },
-        "sample_recommendation": {
-            "general_guideline": "W przypadku fine-tuningu modelu medycznego kluczowa jest jakość oraz różnorodność danych. Zaleca się zebranie minimum 500 przykładów na każdą kategorię anemii, co daje łącznie około 1500 przykładów.",
-            "suggested_sample_numbers": {
-                "per_category": "Minimum 500 przykładów dla mikrocytarnej, makrocytarnej i normocytarnej anemii.",
-                "total": "Około 1500 przykładów – im więcej, tym lepiej."
-            },
-            "notes": "W przypadku ograniczonej liczby danych, warto zastosować techniki augmentacji lub pozyskać dodatkowe źródła danych."
-        },
-        "training_config": {
-            "epochs": 10,
-            "learning_rate": 0.0001,
-            "batch_size": 16,
-            "optimizer": "adam",
-            "scheduler": "None"
-        },
-        "data_split": {
-            "train": "70%",
-            "validation": "15%",
-            "test": "15%"
-        },
-        "preprocessing": {
-            "tokenization": "Specyficzna tokenizacja MedicalBERT",
-            "lowercase": False,
-            "remove_special_characters": True
-        },
-        "evaluation_metrics": {
-            "accuracy": True,
-            "f1_score": True,
-            "precision": True,
-            "recall": True
-        },
-        "samples": {
-            "expected_sample_count": 1500,
-            "sample_examples": sample_examples
-        }
+    # Parametry płytek krwi
+    PLT = np.clip(np.random.normal(loc=250, scale=50, size=n), 150, 450)
+    PDW = np.clip(np.random.normal(loc=13, scale=2, size=n), 10, 17)
+    MPV = np.clip(np.random.normal(loc=9, scale=1, size=n), 7.5, 11)
+    PLCR = np.clip(np.random.normal(loc=25, scale=5, size=n), 15, 35)
+    PCT = np.clip(np.random.normal(loc=0.3, scale=0.05, size=n), 0.19, 0.39)
+
+    return {
+        "WBC": WBC,
+        "NEUT#": NEUT,
+        "LYMPH#": LYMPH,
+        "ALY#": ALY,
+        "ASLY#": ASLY,
+        "MONO#": MONO,
+        "EOS#": EOS,
+        "BASO#": BASO,
+        "NEUT%": NEUT_perc,
+        "LYMPH%": LYMPH_perc,
+        "ALY%": ALY_perc,
+        "ASLY%": ASLY_perc,
+        "MONO%": MONO_perc,
+        "EOS%": EOS_perc,
+        "BASO%": BASO_perc,
+        "NEUT-GI": NEUT_GI,
+        "NEUT-RI": NEUT_RI,
+        "RBC": RBC,
+        "HGB": HGB,
+        "HCT": HCT,
+        "MCV": MCV,
+        "MCH": MCH,
+        "MCHC": MCHC,
+        "RDW-SD": RDW_SD,
+        "RDW-CV": RDW_CV,
+        "Mikrocyty": Mikrocyty,
+        "Makrocyty": Makrocyty,
+        "NRBC#": NRBC,
+        "NRBC%": NRBC_perc,
+        "PLT": PLT,
+        "PDW": PDW,
+        "MPV": MPV,
+        "PLCR": PLCR,
+        "PCT": PCT,
     }
-}
 
-# Zapis do pliku JSON
-with open("medicalbert_finetuning_data.json", "w", encoding="utf-8") as f:
-    json.dump(data, f, ensure_ascii=False, indent=2)
 
-print("Plik JSON został wygenerowany i zapisany jako 'medicalbert_finetuning_data.json'.")
+# Generowanie danych bazowych
+data = generate_normal_values(n_samples)
+df = pd.DataFrame(data)
+
+# Dodajemy etykietę typu anemii
+# Rozkład: 70% wyników "normalnych", a 10% dla każdego typu anemii
+anemia_types = np.random.choice(["normal", "anemia_microcytic", "anemia_macrocytic", "anemia_normocytic"],
+                                size=n_samples, p=[0.7, 0.1, 0.1, 0.1])
+df["anemia_type"] = anemia_types
+
+# Modyfikacja parametrów wg kluczowych wzorców
+# A) Anemia mikrocytarna: ↓ MCV, ↓ MCH, ↑ RDW
+micro_idx = df["anemia_type"] == "anemia_microcytic"
+df.loc[micro_idx, "MCV"] *= np.random.uniform(0.8, 0.9, micro_idx.sum())  # zmniejszenie MCV
+df.loc[micro_idx, "MCH"] *= np.random.uniform(0.8, 0.9, micro_idx.sum())  # zmniejszenie MCH
+df.loc[micro_idx, "RDW-CV"] *= np.random.uniform(1.2, 1.3, micro_idx.sum())  # zwiększenie RDW
+
+# B) Anemia makrocytarna: ↑ MCV, ↑ MCH, ↓ PLT
+macro_idx = df["anemia_type"] == "anemia_macrocytic"
+df.loc[macro_idx, "MCV"] *= np.random.uniform(1.1, 1.3, macro_idx.sum())  # zwiększenie MCV
+df.loc[macro_idx, "MCH"] *= np.random.uniform(1.1, 1.3, macro_idx.sum())  # zwiększenie MCH
+df.loc[macro_idx, "PLT"] *= np.random.uniform(0.8, 0.9, macro_idx.sum())  # zmniejszenie liczby płytek
+
+# C) Anemia normocytarna: ↓ RBC, MCV bez zmian, ↑ RDW
+normo_idx = df["anemia_type"] == "anemia_normocytic"
+df.loc[normo_idx, "RBC"] *= np.random.uniform(0.8, 0.9, normo_idx.sum())  # zmniejszenie RBC
+df.loc[normo_idx, "RDW-CV"] *= np.random.uniform(1.2, 1.3, normo_idx.sum())  # zwiększenie RDW
+
+# Zapis danych do pliku CSV
+df.to_csv("medical_data_anemia_patterns.csv", index=False)
+print("Plik CSV 'medical_data_anemia_patterns.csv' został wygenerowany.")

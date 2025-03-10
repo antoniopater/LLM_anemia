@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 
-# Liczba próbek
-n_samples = 1000
-
+# Liczba próbek na każdą kategorię
+n_per_category = 3333
+total_samples = n_per_category * 4
 
 def generate_normal_values(n):
     # Generowanie wartości dla parametrów krwi z użyciem rozkładów normalnych i ograniczeń
@@ -92,18 +92,23 @@ def generate_normal_values(n):
         "PCT": PCT,
     }
 
-
 # Generowanie danych bazowych
-data = generate_normal_values(n_samples)
+data = generate_normal_values(total_samples)
 df = pd.DataFrame(data)
 
-# Dodajemy etykietę typu anemii
-# Rozkład: 70% wyników "normalnych", a 10% dla każdego typu anemii
-anemia_types = np.random.choice(["normal", "anemia_microcytic", "anemia_macrocytic", "anemia_normocytic"],
-                                size=n_samples, p=[0.7, 0.1, 0.1, 0.1])
+# Przydzielenie etykiety typu anemii w równych ilościach
+anemia_types = (
+    ["normal"] * n_per_category +
+    ["anemia_microcytic"] * n_per_category +
+    ["anemia_macrocytic"] * n_per_category +
+    ["anemia_normocytic"] * n_per_category
+)
+anemia_types = np.array(anemia_types)
+np.random.shuffle(anemia_types)
 df["anemia_type"] = anemia_types
 
 # Modyfikacja parametrów wg kluczowych wzorców
+
 # A) Anemia mikrocytarna: ↓ MCV, ↓ MCH, ↑ RDW
 micro_idx = df["anemia_type"] == "anemia_microcytic"
 df.loc[micro_idx, "MCV"] *= np.random.uniform(0.8, 0.9, micro_idx.sum())  # zmniejszenie MCV
@@ -123,4 +128,4 @@ df.loc[normo_idx, "RDW-CV"] *= np.random.uniform(1.2, 1.3, normo_idx.sum())  # z
 
 # Zapis danych do pliku CSV
 df.to_csv("medical_data_anemia_patterns.csv", index=False)
-print("Plik CSV 'medical_data_anemia_patterns.csv' został wygenerowany.")
+print("Plik CSV 'medical_data_anemia_patterns.csv' został wygenerowany z łączną liczbą rekordów:", total_samples)

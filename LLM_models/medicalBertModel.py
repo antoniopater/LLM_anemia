@@ -11,7 +11,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Load data
-df = pd.read_csv("medical_data_anemia_patterns.csv")  # Replace with your actual data path
+df = pd.read_csv("../medical_data_anemia_patterns.csv")  # Replace with your actual data path
 
 # Encode labels
 label_mapping = {label: idx for idx, label in enumerate(df["anemia_type"].unique())}
@@ -73,13 +73,13 @@ test_dataset = TabularDataset(X_test, y_test, tokenizer)
 
 # Training arguments
 training_args = TrainingArguments(
-    output_dir="./results",
+    output_dir="./resultsNew",
     num_train_epochs=10,
     per_device_train_batch_size=8,
     per_device_eval_batch_size=8,
     evaluation_strategy="epoch",
     save_strategy="epoch",
-    logging_dir="./logs",
+    logging_dir="../logs",
     logging_steps=10,
     load_best_model_at_end=True,
 )

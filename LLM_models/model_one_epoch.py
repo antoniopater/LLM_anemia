@@ -163,9 +163,9 @@ class ClassifierAnemia:
 
 if __name__ == "__main__":
     # Ustawienia
-    csv_path = "medical_data_anemia_patterns.csv"
+    csv_path = "../medical_data_anemia_patterns.csv"
     text_column = None  # Jeżeli nie ma kolumny tekstowej, dane są konwertowane z cech tabelarycznych
-    batch_size = 16
+    batch_size = 32
     num_epochs = 10
     lr = 1e-4
 
@@ -180,5 +180,5 @@ if __name__ == "__main__":
     classifier = ClassifierAnemia(csv_path=csv_path, text_column=text_column, batch_size=batch_size, lr=lr)
 
     # Trening modelu z walidacją i early stopping
-    classifier.train_model(train_loader, val_loader, epochs=num_epochs, model_path="best_medicalbert_model.pth",
+    classifier.train_model(train_loader, val_loader, epochs=num_epochs, model_path="../best_medicalbert_model.pth",
                            patience=2, min_delta=0.001)

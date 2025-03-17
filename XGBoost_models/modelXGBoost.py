@@ -1,9 +1,8 @@
+import joblib  # Upewnij się, że masz joblib: pip install joblib
 import pandas as pd
-import numpy as np
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
-from sklearn.metrics import accuracy_score
-import joblib  # Upewnij się, że masz joblib: pip install joblib
 
 # Wczytaj dane z pliku CSV
 df = pd.read_csv("synthetic_data_vae.csv")
@@ -33,7 +32,7 @@ y = df['Label_num']
 # Podział na zbiór treningowy i testowy (80/20)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Inicjalizacja i trenowanie modelu XGBoost
+# Inicjalizacja i trenowanie modelu XGBoost_models
 model = XGBClassifier(eval_metric='mlogloss')
 model.fit(X_train, y_train)
 

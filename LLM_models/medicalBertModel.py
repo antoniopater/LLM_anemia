@@ -11,7 +11,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Load data
-df = pd.read_csv("../medical_data_anemia_patterns.csv")  # Replace with your actual data path
+df = pd.read_csv("../data/medical_data_anemia_patterns.csv")  # Replace with your actual data path
 
 # Encode labels
 label_mapping = {label: idx for idx, label in enumerate(df["anemia_type"].unique())}

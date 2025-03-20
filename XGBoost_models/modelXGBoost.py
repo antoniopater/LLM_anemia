@@ -3,29 +3,10 @@ import pandas as pd
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
+import preprocessData
 
-# Wczytaj dane z pliku CSV
-df = pd.read_csv("synthetic_data_vae.csv")
+df = preprocessData.changeLabels()
 
-# Lista kolumn one-hot z etykietami
-label_cols = ['Label_Anemia Makrocytarna', 'Label_Anemia Mikrocytarna', 'Label_Anemia Normocytarna', 'Label_Healthy']
-
-# Utwórz pojedynczą kolumnę 'Label' na podstawie kolumn one-hot
-df['Label'] = df[label_cols].idxmax(axis=1)
-
-# Usuń prefiks 'Label_' z nazwy etykiety
-df['Label'] = df['Label'].str.replace('Label_', '')
-
-# Mapowanie etykiet na wartości numeryczne
-label_mapping = {
-    "Anemia Mikrocytarna": 0,
-    "Anemia Makrocytarna": 1,
-    "Anemia Normocytarna": 2,
-    "Healthy": 3
-}
-df['Label_num'] = df['Label'].map(label_mapping)
-
-# Wybierz cechy (features) oraz target
 features = ['RBC', 'HGB', 'HCT', 'MCV', 'MCH', 'MCHC', 'RDW', 'PLT', 'WBC']
 X = df[features]
 y = df['Label_num']

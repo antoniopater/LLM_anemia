@@ -163,7 +163,7 @@ class ClassifierAnemia:
 
 if __name__ == "__main__":
     # Ustawienia
-    csv_path = "../medical_data_anemia_patterns.csv"
+    csv_path = "../data/medical_data_anemia_patterns.csv"
     text_column = None  # Jeżeli nie ma kolumny tekstowej, dane są konwertowane z cech tabelarycznych
     batch_size = 32
     num_epochs = 10

@@ -1,3 +1,4 @@
+
 import numpy as np
 import pandas as pd
 import torch
@@ -38,7 +39,7 @@ def generate_group_data(label, n_samples=3000):
         RDW = np.random.normal(16.0, 1.5, n_samples)
         PLT = np.random.normal(200, 30, n_samples)
         WBC = np.random.normal(7.0, 1.0, n_samples)
-    else:  # Anemia Normocytarna
+    elif label == "Anemia Mikrocytarna":
         RBC = np.random.normal(4.0, 0.5, n_samples)
         HGB = np.random.normal(11.0, 1.0, n_samples)
         HCT = np.random.normal(33.0, 2.0, n_samples)
@@ -48,6 +49,17 @@ def generate_group_data(label, n_samples=3000):
         RDW = np.random.normal(15.0, 1.5, n_samples)
         PLT = np.random.normal(250, 40, n_samples)
         WBC = np.random.normal(8.0, 1.0, n_samples)
+    else:
+        RBC = np.random.normal(5.0, 0.5, n_samples)  # liczba erytrocytów (typowy zakres ~4.5-5.9 x10^6/µl)
+        HGB = np.random.normal(16.0, 1.2,n_samples)  # hemoglobina (dla mężczyzn ~13.8-17.2 g/dl, dla kobiet ~12.1-15.1 g/dl)
+        HCT = np.random.normal(42.0, 2.0, n_samples)  # hematokryt (mężczyźni ~40-50%, kobiety ~36-44%)
+        MCV = np.random.normal(90.0, 5.0, n_samples)  # średnia objętość krwinki (80-100 fl)
+        MCH = np.random.normal(29.0, 2.0, n_samples)  # średnia masa hemoglobiny w krwince (27-33 pg)
+        MCHC = np.random.normal(34.0, 1.0, n_samples)  # średnie stężenie hemoglobiny (33-36 g/dl)
+        RDW = np.random.normal(13.5, 1.0, n_samples)  # wskaźnik zróżnicowania wielkości krwinek (11.5-14.5%)
+        PLT = np.random.normal(280, 40, n_samples)  # płytki krwi (150-450 x10^3/µl)
+        WBC = np.random.normal(7.0, 1.0, n_samples)
+
 
     df = pd.DataFrame({
         'RBC': RBC,
@@ -67,11 +79,11 @@ def generate_group_data(label, n_samples=3000):
 data_mikro = generate_group_data("Anemia Mikrocytarna")
 data_makro = generate_group_data("Anemia Makrocytarna")
 data_normo = generate_group_data("Anemia Normocytarna")
+data_healthy = generate_group_data("Healthy")
 
 df = pd.concat([data_mikro, data_makro, data_normo], ignore_index=True)
 df = df.sample(frac=1, random_state=42).reset_index(drop=True)
 
-# Przekształcamy kolumnę Label do postaci zmiennych zerojedynkowych (one-hot encoding)
 # Przekształcamy kolumnę Label do postaci zmiennych zerojedynkowych (one-hot encoding)
 df_encoded = pd.get_dummies(df, columns=['Label'])
 

@@ -20,7 +20,8 @@ df['Label'] = df['Label'].str.replace('Label_', '')
 label_mapping = {
     "Anemia Mikrocytarna": 0,
     "Anemia Makrocytarna": 1,
-    "Anemia Normocytarna": 2
+    "Anemia Normocytarna": 2,
+    "Healthy":4
 }
 df['Label_num'] = df['Label'].map(label_mapping)
 

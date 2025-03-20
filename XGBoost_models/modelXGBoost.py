@@ -8,7 +8,7 @@ from xgboost import XGBClassifier
 df = pd.read_csv("synthetic_data_vae.csv")
 
 # Lista kolumn one-hot z etykietami
-label_cols = ['Label_Anemia Makrocytarna', 'Label_Anemia Mikrocytarna', 'Label_Anemia Normocytarna']
+label_cols = ['Label_Anemia Makrocytarna', 'Label_Anemia Mikrocytarna', 'Label_Anemia Normocytarna', 'Label_Healthy']
 
 # Utwórz pojedynczą kolumnę 'Label' na podstawie kolumn one-hot
 df['Label'] = df[label_cols].idxmax(axis=1)
@@ -20,7 +20,8 @@ df['Label'] = df['Label'].str.replace('Label_', '')
 label_mapping = {
     "Anemia Mikrocytarna": 0,
     "Anemia Makrocytarna": 1,
-    "Anemia Normocytarna": 2
+    "Anemia Normocytarna": 2,
+    "Healthy": 3
 }
 df['Label_num'] = df['Label'].map(label_mapping)
 

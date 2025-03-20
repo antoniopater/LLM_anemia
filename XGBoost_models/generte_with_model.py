@@ -81,7 +81,7 @@ data_makro = generate_group_data("Anemia Makrocytarna")
 data_normo = generate_group_data("Anemia Normocytarna")
 data_healthy = generate_group_data("Healthy")
 
-df = pd.concat([data_mikro, data_makro, data_normo], ignore_index=True)
+df = pd.concat([data_mikro, data_makro, data_normo, data_healthy], ignore_index=True)
 df = df.sample(frac=1, random_state=42).reset_index(drop=True)
 
 # Przekształcamy kolumnę Label do postaci zmiennych zerojedynkowych (one-hot encoding)
@@ -185,6 +185,7 @@ for col in numeric_cols:
 
 print("Przykładowe wygenerowane dane:")
 print(df_generated.head())
-
+print(df_generated.columns)
+print(df_generated.shape)
 # Opcjonalnie: zapis do pliku CSV
 df_generated.to_csv("synthetic_data_vae.csv", index=False)

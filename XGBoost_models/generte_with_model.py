@@ -18,7 +18,7 @@ latent_dim = 10  # wymiar przestrzeni latentnej
 # Kolumny: ['RBC', 'HGB', 'HCT', 'MCV', 'MCH', 'MCHC', 'RDW', 'PLT', 'WBC', 'Label']
 
 # Przykładowa symulacja danych (analogiczna do poprzedniego przykładu)
-def generate_group_data(label, n_samples=3000):
+def generate_group_data(label, n_samples=30000):
     if label == "Anemia Mikrocytarna":
         RBC = np.random.normal(4.0, 0.5, n_samples)
         HGB = np.random.normal(11.0, 1.0, n_samples)
@@ -86,6 +86,13 @@ df = df.sample(frac=1, random_state=42).reset_index(drop=True)
 
 # Przekształcamy kolumnę Label do postaci zmiennych zerojedynkowych (one-hot encoding)
 df_encoded = pd.get_dummies(df, columns=['Label'])
+# Znajdujemy początek kolumn etykiet (one-hot encoded labels)
+label_cols = [col for col in df_encoded.columns if "Label_" in col]  # Znajduje kolumny etykiet
+label_start_idx = df_encoded.columns.get_loc(label_cols[0])  # Pobiera indeks pierwszej etykiety
+
+print(f"Kolumny etykiet zaczynają się od indeksu: {label_start_idx}")
+print(f"Kolumny etykiet: {label_cols}")
+
 
 # Normalizacja danych numerycznych (opcjonalnie, ale pomocna przy trenowaniu VAE)
 numeric_cols = ['RBC', 'HGB', 'HCT', 'MCV', 'MCH', 'MCHC', 'RDW', 'PLT', 'WBC']
@@ -131,7 +138,10 @@ class VAE(nn.Module):
     def decode(self, z):
         h4 = self.relu(self.fc4(z))
         h5 = self.relu(self.fc5(h4))
-        return self.fc6(h5)
+        output = self.fc6(h5)
+
+        output[:, label_start_idx:] = torch.sigmoid(output[:, label_start_idx:])  # Sigmoid dla etykiet
+        return output
 
     def forward(self, x):
         mu, logvar = self.encode(x)
@@ -147,11 +157,11 @@ reconstruction_loss_fn = nn.MSELoss(reduction='sum')
 
 # Funkcja utraty (loss) dla VAE
 def loss_function(recon_x, x, mu, logvar):
-    # Utrata rekonstrukcji
-    recon_loss = reconstruction_loss_fn(recon_x, x)
-    # KLD - odchylenie od rozkładu normalnego
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    return recon_loss + KLD
+    mse_loss = reconstruction_loss_fn(recon_x[:, :label_start_idx], x[:, :label_start_idx])  # MSE dla cech
+    bce_loss = nn.BCEWithLogitsLoss()(recon_x[:, label_start_idx:], x[:, label_start_idx:])  # BCE dla etykiet
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())  # KL divergence
+
+    return mse_loss + bce_loss + KLD
 
 
 # Trening modelu

@@ -1,5 +1,7 @@
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
+
+import pickle
 import preprocessData
 
 df = preprocessData.changeLabels()
@@ -16,5 +18,15 @@ model = KNeighborsClassifier(n_neighbors=4)
 model.fit(X_train, y_train)
 predictions = model.predict(X_test)
 
-accuracy = model.score(X_test, y_test)
+# Zapis modelu do pliku
+with open("model.pkl", "wb") as f:
+    pickle.dump(model, f)
+print("Model zapisany jako knn_model.pkl")
+
+# Wczytywanie modelu z pliku
+with open("model.pkl", "rb") as f:
+    loaded_model = pickle.load(f)
+
+# Ewaluacja modelu
+accuracy = loaded_model.score(X_test, y_test)
 print(f"Accuracy KNN: {accuracy}")

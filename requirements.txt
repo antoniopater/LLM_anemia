@@ -18,4 +18,4 @@ xgboost~=3.0.0
 joblib~=1.4.2
 plotly~=6.0.0
 streamlit~=1.44.0
-google-generativeai==0.4.0
+google-generativeai==0.8.4

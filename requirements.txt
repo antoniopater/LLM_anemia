@@ -19,3 +19,7 @@ joblib~=1.4.2
 plotly~=6.0.0
 streamlit~=1.44.0
 google-generativeai==0.8.4
+python-dotenv~=1.1.0
+reportlab~=4.3.1
+fpdf~=1.7.2
+supertree~=0.5.5

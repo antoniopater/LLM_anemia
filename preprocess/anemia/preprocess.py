@@ -1,0 +1,47 @@
+import os
+import joblib
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+scaler = None
+pca = None
+
+
+def scaleData(X, n_components=3):
+    global scaler, pca
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    pca = PCA(n_components=n_components)
+    X_pca = pca.fit_transform(X_scaled)
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    scaler_path = os.path.join(script_dir, "scaler.pkl")
+    pca_path = os.path.join(script_dir, "pca.pkl")
+
+    # Save the scaler and PCA objects
+    joblib.dump(scaler, scaler_path)
+    joblib.dump(pca, pca_path)
+
+    return X_pca
+
+
+def changeLabels():
+    df = pd.read_csv("../../trainingData/anemia/synthetic_data_vae.csv")
+
+    label_cols = ['Label_Anemia Makrocytarna', 'Label_Anemia Mikrocytarna',
+                  'Label_Anemia Normocytarna', 'Label_Healthy']
+
+    df['Label'] = df[label_cols].idxmax(axis=1)
+    df['Label'] = df['Label'].str.replace('Label_', '')
+
+    label_mapping = {
+        "Anemia Mikrocytarna": 0,
+        "Anemia Makrocytarna": 1,
+        "Anemia Normocytarna": 2,
+        "Healthy": 3
+    }
+    df['Label_num'] = df['Label'].map(label_mapping)
+
+    return df

@@ -10,14 +10,14 @@ from sklearn.preprocessing import StandardScaler
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-# Load data
-df = pd.read_csv("../data/medical_data_anemia_patterns.csv")  # Replace with your actual data path
+# Load trainingData
+df = pd.read_csv("../trainingData/trainingData/medical_data_anemia_patterns.csv")  # Replace with your actual trainingData path
 
 # Encode labels
 label_mapping = {label: idx for idx, label in enumerate(df["anemia_type"].unique())}
 df["label"] = df["anemia_type"].map(label_mapping)
 
-# Split data into features and target
+# Split trainingData into features and target
 X = df.drop(columns=["anemia_type", "label"]).values
 y = df["label"].values
 
@@ -25,7 +25,7 @@ y = df["label"].values
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# Convert numeric data to text format
+# Convert numeric trainingData to text format
 def convert_row_to_text(row):
     # Create a string in the format "FeatureName: value"
     text_representation = " ".join([f"{col}:{value}" for col, value in zip(df.columns[:-1], row)])
@@ -34,7 +34,7 @@ def convert_row_to_text(row):
 # Apply the conversion to each row
 text_data = [convert_row_to_text(row) for row in X_scaled]
 
-# Split data into train and test sets
+# Split trainingData into train and test sets
 X_train, X_test, y_train, y_test = train_test_split(text_data, y, test_size=0.2, random_state=42)
 
 # Convert to PyTorch Datasets

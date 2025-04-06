@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 import torch
-import random
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
@@ -19,67 +18,43 @@ latent_dim = 10  # wymiar przestrzeni latentnej
 # Kolumny: ['RBC', 'HGB', 'HCT', 'MCV', 'MCH', 'MCHC', 'RDW', 'PLT', 'WBC', 'Label']
 
 # Przykładowa symulacja danych (analogiczna do poprzedniego przykładu)
-def generate_group_data(label, n_samples=random.randint(27000, 33000)):
-    if label == "Anemia Mikrocytarna":
-        RBC = np.random.normal(4.0, 0.5, n_samples)
-        HGB = np.random.normal(11.0, 1.0, n_samples)
-        HCT = np.random.normal(33.0, 2.0, n_samples)
-        MCV = np.random.normal(70.0, 5.0, n_samples)
-        MCH = np.random.normal(23.0, 2.0, n_samples)
-        MCHC = np.random.normal(32.0, 1.0, n_samples)
-        RDW = np.random.normal(15.0, 1.5, n_samples)
-        PLT = np.random.normal(300, 50, n_samples)
-        WBC = np.random.normal(7.0, 1.0, n_samples)
-    elif label == "Anemia Makrocytarna":
-        RBC = np.random.normal(3.8, 0.5, n_samples)
-        HGB = np.random.normal(10.5, 1.0, n_samples)
-        HCT = np.random.normal(31.0, 2.0, n_samples)
-        MCV = np.random.normal(105.0, 10.0, n_samples)
-        MCH = np.random.normal(35.0, 3.0, n_samples)
-        MCHC = np.random.normal(33.0, 1.0, n_samples)
-        RDW = np.random.normal(16.0, 1.5, n_samples)
-        PLT = np.random.normal(200, 30, n_samples)
-        WBC = np.random.normal(7.0, 1.0, n_samples)
-    elif label == "Anemia Mikrocytarna":
-        RBC = np.random.normal(4.0, 0.5, n_samples)
-        HGB = np.random.normal(11.0, 1.0, n_samples)
-        HCT = np.random.normal(33.0, 2.0, n_samples)
-        MCV = np.random.normal(90.0, 5.0, n_samples)
-        MCH = np.random.normal(30.0, 2.0, n_samples)
-        MCHC = np.random.normal(33.0, 1.0, n_samples)
-        RDW = np.random.normal(15.0, 1.5, n_samples)
-        PLT = np.random.normal(250, 40, n_samples)
-        WBC = np.random.normal(8.0, 1.0, n_samples)
-    elif label == "Anemia Hemolityczna":
-        RBC = np.random.normal(3.2, 0.4, n_samples)
-        HGB = np.random.normal(9.5, 1.0, n_samples)
-        HCT = np.random.normal(28.0, 2.5, n_samples)
-        MCV = np.random.normal(88.0, 4.0, n_samples)
-        MCH = np.random.normal(29.5, 1.5, n_samples)
-        MCHC = np.random.normal(33.0, 1.0, n_samples)
-        RDW = np.random.normal(17.0, 2.0, n_samples)
-        PLT = np.random.normal(320, 60, n_samples)
-        WBC = np.random.normal(10.5, 1.5, n_samples)
-    elif label == "Anemia Aplastyczna":
-        RBC = np.random.normal(2.8, 0.4, n_samples)  # znacznie obniżone
-        HGB = np.random.normal(8.5, 1.0, n_samples)  # obniżone
-        HCT = np.random.normal(26.0, 2.0, n_samples)  # obniżone
-        MCV = np.random.normal(92.0, 4.0, n_samples)  # N lub lekko ↑
-        MCH = np.random.normal(30.0, 1.5, n_samples)  # norma
-        MCHC = np.random.normal(33.0, 0.8, n_samples)  # norma
-        RDW = np.random.normal(14.5, 1.5, n_samples)  # N lub lekko ↑
-        PLT = np.random.normal(60, 20, n_samples)  # znacznie ↓
-        WBC = np.random.normal(2.5, 0.8, n_samples)
-    elif label == "Trombocytopenia":
-        RBC = np.random.normal(4.5, 0.4, n_samples)  # w normie
-        HGB = np.random.normal(13.0, 1.0, n_samples)  # w normie
-        HCT = np.random.normal(40.0, 2.5, n_samples)  # w normie
-        MCV = np.random.normal(88.0, 3.0, n_samples)  # norma
-        MCH = np.random.normal(29.5, 1.2, n_samples)  # norma
-        MCHC = np.random.normal(33.5, 0.7, n_samples)  # norma
-        RDW = np.random.normal(13.5, 1.0, n_samples)  # N lub lekko ↑
-        PLT = np.random.normal(70, 15, n_samples)  # znacznie obniżone
-        WBC = np.random.normal(6.5, 1.0, n_samples)  # w normie lub lekko ↑
+def generate_infection_data(label, n_samples=30000):
+    if label == "Infekcja Wirusowa":
+        WBC = np.random.normal(4.5, 1.0, n_samples)         # obniżone lub norma
+        NEUT = np.random.normal(1.8, 0.6, n_samples)        # neutropenia
+        LYMPH = np.random.normal(3.5, 0.8, n_samples)       # limfocytoza
+        ALY = np.random.normal(1.2, 0.3, n_samples)         # aktywne limfocyty
+        ASLY = np.random.normal(0.9, 0.2, n_samples)        # komórki plazmatyczne
+        MONO = np.random.normal(0.7, 0.2, n_samples)        # zwiększone monocyty
+        EOS = np.random.normal(0.1, 0.05, n_samples)        # normalne lub ↓
+        BASO = np.random.normal(0.05, 0.02, n_samples)      # norma
+        NEUT_GI = np.random.normal(0.2, 0.05, n_samples)    # ↓ aktywność neutrofili
+        PLT = np.random.normal(220, 50, n_samples)          # normalne lub ↓
+
+    elif label == "Infekcja Bakteryjna":
+        WBC = np.random.normal(13.0, 2.5, n_samples)        # leukocytoza
+        NEUT = np.random.normal(9.0, 1.5, n_samples)        # neutrofilia
+        LYMPH = np.random.normal(1.2, 0.3, n_samples)       # limfopenia
+        ALY = np.random.normal(0.4, 0.1, n_samples)         # ↓ ALY
+        ASLY = np.random.normal(0.2, 0.05, n_samples)       # ↓ ASLY
+        MONO = np.random.normal(0.9, 0.2, n_samples)        # ↑ MONO w przewlekłych
+        EOS = np.random.normal(0.05, 0.02, n_samples)       # ↓
+        BASO = np.random.normal(0.05, 0.02, n_samples)      # norma
+        NEUT_GI = np.random.normal(0.6, 0.1, n_samples)     # ↑ aktywność neutrofili
+        PLT = np.random.normal(350, 60, n_samples)          # ↑ w ostrej fazie
+
+    elif label == "Infekcja Mieszana":
+        WBC = np.random.normal(6.0, 2.0, n_samples)         # może być obniżone
+        NEUT = np.random.normal(4.5, 1.5, n_samples)        # zależne od fazy
+        LYMPH = np.random.normal(2.2, 0.9, n_samples)       # ↑ lub ↓
+        ALY = np.random.normal(1.0, 0.4, n_samples)         # aktywowane limfocyty
+        ASLY = np.random.normal(0.7, 0.25, n_samples)       # podwyższone
+        MONO = np.random.normal(1.0, 0.2, n_samples)        # ↑ w przewlekłych
+        EOS = np.random.normal(0.1, 0.05, n_samples)        # norma
+        BASO = np.random.normal(0.05, 0.02, n_samples)      # norma
+        NEUT_GI = np.random.normal(0.4, 0.1, n_samples)     # mieszane
+        PLT = np.random.normal(180, 70, n_samples)          # często ↓ w sepsie
+
     else:
         RBC = np.random.normal(5.0, 0.5, n_samples)  # liczba erytrocytów (typowy zakres ~4.5-5.9 x10^6/µl)
         HGB = np.random.normal(16.0, 1.2,n_samples)  # hemoglobina (dla mężczyzn ~13.8-17.2 g/dl, dla kobiet ~12.1-15.1 g/dl)
@@ -93,29 +68,27 @@ def generate_group_data(label, n_samples=random.randint(27000, 33000)):
 
 
     df = pd.DataFrame({
-        'RBC': RBC,
-        'HGB': HGB,
-        'HCT': HCT,
-        'MCV': MCV,
-        'MCH': MCH,
-        'MCHC': MCHC,
-        'RDW': RDW,
-        'PLT': PLT,
-        'WBC': WBC,
-        'Label': [label] * n_samples
+        "WBC": WBC,
+        "NEUT#": NEUT,
+        "LYMPH#": LYMPH,
+        "ALY#": ALY,
+        "ASLY#": ASLY,
+        "MONO#": MONO,
+        "EOS#": EOS,
+        "BASO#": BASO,
+        "NEUT-GI": NEUT_GI,
+        "PLT": PLT,
+        "Label": [label] * n_samples
     })
     return df
 
 
-data_mikro = generate_group_data("Anemia Mikrocytarna")
-data_makro = generate_group_data("Anemia Makrocytarna")
-data_normo = generate_group_data("Anemia Normocytarna")
-data_hemo = generate_group_data("Anemia Hemolityczna")
-data_apla = generate_group_data("Anemia Aplastyczna")
-data_trombo = generate_group_data("Trombocytopenia")
-data_healthy = generate_group_data("Healthy")
+data_wirus = generate_infection_data("Infekcja Wirusowa")
+data_bakte = generate_infection_data("Infekcja Bakteryjna")
+data_mix = generate_infection_data("Infekcja Mieszana")
+data_healthy = generate_infection_data("Healthy")
 
-df = pd.concat([data_mikro, data_makro, data_normo,data_hemo,data_apla,data_trombo, data_healthy], ignore_index=True)
+df = pd.concat([data_wirus, data_bakte, data_mix, data_healthy], ignore_index=True)
 df = df.sample(frac=1, random_state=42).reset_index(drop=True)
 
 # Przekształcamy kolumnę Label do postaci zmiennych zerojedynkowych (one-hot encoding)
@@ -129,7 +102,7 @@ print(f"Kolumny etykiet: {label_cols}")
 
 
 # Normalizacja danych numerycznych (opcjonalnie, ale pomocna przy trenowaniu VAE)
-numeric_cols = ['RBC', 'HGB', 'HCT', 'MCV', 'MCH', 'MCHC', 'RDW', 'PLT', 'WBC']
+numeric_cols = ['WBC', 'NEUT#', 'LYMPH#', 'ALY#', 'ASLY#', 'MCHC', 'MONO#', 'EOS#', 'BASO#']
 df_encoded[numeric_cols] = (df_encoded[numeric_cols] - df_encoded[numeric_cols].mean()) / df_encoded[numeric_cols].std()
 
 # Konwersja wszystkich kolumn na typ float32

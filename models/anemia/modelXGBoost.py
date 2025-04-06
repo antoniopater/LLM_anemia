@@ -14,7 +14,9 @@ df = preprocessData.changeLabels()
 features = ['RBC', 'HGB', 'HCT', 'MCV', 'MCH', 'MCHC', 'RDW', 'PLT', 'WBC']
 X = df[features]
 y = df['Label_num']
-
+print("Unikalne klasy w Label_num:", sorted(df['Label_num'].unique()))
+print("Liczba przykładów:")
+print(df['Label'].value_counts())
 X_train, X_test, y_train, y_test = train_test_split(X, y,
                                                     test_size=0.2,
                                                     random_state=42)

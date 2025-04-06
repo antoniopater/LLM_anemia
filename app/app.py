@@ -1,4 +1,6 @@
 import os
+import traceback
+
 import joblib
 import pandas as pd
 import locale
@@ -20,7 +22,9 @@ if selected_disease == "Anemia":
         "Anemia Mikrocytarna": 0,
         "Anemia Makrocytarna": 1,
         "Anemia Normocytarna": 2,
-        "Healthy": 3
+        "Anemia Hemolityczna":3,
+        "Anemia Aplastyczna":4,
+        "Healthy": 5
     }
     features = ['RBC', 'HGB', 'HCT', 'MCV', 'MCH', 'MCHC', 'RDW', 'PLT', 'WBC']
     typeMapping = {v: k for k, v in label_mapping.items()}
@@ -43,16 +47,36 @@ if selected_disease == "Anemia":
         except ValueError:
             return None
 
-    def load_model(modelPath="models/anemia/modelXGBoost.pkl", scalerPath="preprocess/anemia/scaler.pkl",
-                   pcaPath="preprocess/anemia/pca.pkl"):
+
+    def load_model(
+            modelPath="../models/anemia/modelXGBoost.pkl",
+            scalerPath="../preprocess/anemia/scaler.pkl",
+            pcaPath="../preprocess/anemia/pca.pkl"
+    ):
         try:
-            model = joblib.load(modelPath)
-            scaler = joblib.load(scalerPath)
-            pca = joblib.load(pcaPath)
+            model_full_path = os.path.abspath(modelPath)
+            scaler_full_path = os.path.abspath(scalerPath)
+            pca_full_path = os.path.abspath(pcaPath)
+
+            # Weryfikacja, czy pliki istnieją
+            if not os.path.exists(model_full_path):
+                print(f"❌ Nie znaleziono modelu pod ścieżką: {model_full_path}")
+            if not os.path.exists(scaler_full_path):
+                print(f"❌ Nie znaleziono scalera pod ścieżką: {scaler_full_path}")
+            if not os.path.exists(pca_full_path):
+                print(f"❌ Nie znaleziono PCA pod ścieżką: {pca_full_path}")
+
+            model = joblib.load(model_full_path)
+            scaler = joblib.load(scaler_full_path)
+            pca = joblib.load(pca_full_path)
+
+            print("✅ Model, scaler i PCA zostały poprawnie załadowane.")
             return model, scaler, pca
+
         except Exception as e:
-            print("Błąd ładowania", e)
-        return None, None, None
+            print("❌ Błąd ładowania modelu lub preprocesorów:")
+            traceback.print_exc()
+            return None, None, None
 
     st.title("System predykcji anemii")
 

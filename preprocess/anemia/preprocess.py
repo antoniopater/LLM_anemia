@@ -30,8 +30,17 @@ def scaleData(X, n_components=3):
 def changeLabels():
     df = pd.read_csv("../../trainingData/anemia/synthetic_data_vae.csv")
 
-    label_cols = ['Label_Anemia Makrocytarna', 'Label_Anemia Mikrocytarna',
-                  'Label_Anemia Normocytarna', 'Label_Healthy']
+    label_cols = ['Label_Anemia Makrocytarna',
+                  'Label_Anemia Mikrocytarna',
+                  'Label_Anemia Normocytarna',
+                  'Label_Anemia Hemolityczna',
+                  'Label_Anemia Aplastyczna',
+                  'Label_Trombocytopenia',
+                  'Label_Healthy'
+                  ]
+    missing_cols = [col for col in label_cols if col not in df.columns]
+    if missing_cols:
+        raise ValueError(f"Brakuje kolumn w pliku CSV: {missing_cols}")
 
     df['Label'] = df[label_cols].idxmax(axis=1)
     df['Label'] = df['Label'].str.replace('Label_', '')
@@ -40,7 +49,10 @@ def changeLabels():
         "Anemia Mikrocytarna": 0,
         "Anemia Makrocytarna": 1,
         "Anemia Normocytarna": 2,
-        "Healthy": 3
+        "Anemia Hemolityczna":3,
+        "Anemia Aplastyczna": 4,
+        "Trombocytopenia": 5,
+        "Healthy": 6
     }
     df['Label_num'] = df['Label'].map(label_mapping)
 

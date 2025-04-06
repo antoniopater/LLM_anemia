@@ -28,7 +28,7 @@ def scaleData(X, n_components=3):
 
 
 def changeLabels():
-    df = pd.read_csv("../../trainingData/anemia/synthetic_data_vae.csv")
+    df = pd.read_csv("../../trainingData/anemia/synthetic_data_vae2.csv")
 
     label_cols = ['Label_Anemia Makrocytarna',
                   'Label_Anemia Mikrocytarna',

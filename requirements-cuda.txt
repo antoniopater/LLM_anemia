@@ -1,0 +1,24 @@
+# CUDA wersja Pytorch – dla użytkowników z kartą graficzną wspierającą CUDA
+# Upewnij się, że masz zainstalowane sterowniki NVIDIA i CUDA Toolkit
+
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+numpy==1.26.4
+pandas==2.2.3
+tensorflow==2.16.2
+scikit-learn==1.6.1
+torch==2.2.2+cu121
+torchvision==0.17.2+cu121
+torchaudio==2.2.2+cu121
+keras==3.9.0
+matplotlib==3.9.0
+transformers==4.48.0
+xgboost~=3.0.0
+joblib~=1.4.2
+plotly~=6.0.0
+streamlit~=1.44.0
+google-generativeai==0.8.4
+python-dotenv~=1.1.0
+reportlab~=4.3.1
+fpdf~=1.7.2
+supertree~=0.5.5

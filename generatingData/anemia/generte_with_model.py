@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 # Ustawienia
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(device)
 batch_size = 128
 epochs = 100
 learning_rate = 1e-3
@@ -232,4 +233,4 @@ print(df_generated.head())
 print(df_generated.columns)
 print(df_generated.shape)
 # Opcjonalnie: zapis do pliku CSV
-df_generated.to_csv("synthetic_data_vae.csv", index=False)
+df_generated.to_csv("synthetic_data_vae2.csv", index=False)

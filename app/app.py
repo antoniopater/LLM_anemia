@@ -49,9 +49,9 @@ if selected_disease == "Anemia":
 
 
     def load_model(
-            modelPath="../models/anemia/modelXGBoost.pkl",
-            scalerPath="../preprocess/anemia/scaler.pkl",
-            pcaPath="../preprocess/anemia/pca.pkl"
+            modelPath="models/anemia/modelXGBoost.pkl",
+            scalerPath="preprocess/anemia/scaler.pkl",
+            pcaPath="preprocess/anemia/pca.pkl"
     ):
         try:
             model_full_path = os.path.abspath(modelPath)

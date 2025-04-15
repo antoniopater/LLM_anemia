@@ -233,4 +233,4 @@ print(df_generated.head())
 print(df_generated.columns)
 print(df_generated.shape)
 # Opcjonalnie: zapis do pliku CSV
-df_generated.to_csv("synthetic_data_vae2.csv", index=False)
+df_generated.to_csv("synthetic_data_vae3.csv", index=False)

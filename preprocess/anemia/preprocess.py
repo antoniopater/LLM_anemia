@@ -28,8 +28,8 @@ def scaleData(X, n_components=3):
 
 
 def changeLabels():
-    df = pd.read_csv("../../trainingData/anemia/synthetic_data_vae2.csv")
-
+    # df = pd.read_csv("../../trainingData/anemia/synthetic_data_vae3.csv")
+    df = pd.read_csv("../../trainingData/anemia/synthetic_data_vae3.csv")
     label_cols = ['Label_Anemia Makrocytarna',
                   'Label_Anemia Mikrocytarna',
                   'Label_Anemia Normocytarna',
@@ -48,12 +48,19 @@ def changeLabels():
     label_mapping = {
         "Anemia Mikrocytarna": 0,
         "Anemia Makrocytarna": 1,
-        "Anemia Normocytarna": 2,
-        "Anemia Hemolityczna":3,
-        "Anemia Aplastyczna": 4,
-        "Trombocytopenia": 5,
-        "Healthy": 6
+        "Anemia Hemolityczna": 2,
+        "Anemia Aplastyczna": 3,
+        "Trombocytopenia": 4,
+        "Healthy": 5
     }
     df['Label_num'] = df['Label'].map(label_mapping)
 
     return df
+
+
+if __name__ == "__main__":
+    df = changeLabels()
+
+    print(df['Label'].value_counts())
+
+    print(df.shape)

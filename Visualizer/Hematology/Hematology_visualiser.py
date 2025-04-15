@@ -58,6 +58,6 @@ class AnemiaVisualizer:
 
 
 if __name__ == "__main__":
-    path = "/Users/antonio/Desktop/LLM_anemia2/trainingData/anemia/synthetic_data_vae2.csv"
+    path = "../../trainingData/anemia/synthetic_data_vae3.csv"
     viz = AnemiaVisualizer(path)
     viz.plot_all_heatmaps()

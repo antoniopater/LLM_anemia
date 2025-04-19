@@ -143,7 +143,8 @@ This project predicts the probability of various anemia types based on laborator
 
 ## 📚 Data Source
 
-Medical datasets were provided by collaborating researchers from another university (scientific society). Synthetic data is generated using deep generative models (VAE).
+Medical datasets were provided by collaborating researchers from Jagiellonian University (scientific society). 
+Synthetic data is generated using deep generative models (VAE).
 
 ---
 

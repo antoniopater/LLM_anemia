@@ -53,7 +53,7 @@ class_names = ['Aplastyczna', 'Hemolityczna', 'Makrocytarna', 'Mikrocytarna', 'N
                'Trombocytopenia']
 # Dopasuj nazwy do znanych klas
 class_names_subset = [class_names[i] for i in known_classes]
-
+print("Nazwy klas w y_test:", class_names_subset)
 # Oblicz ROC i AUC dla każdej klasy
 fpr = dict()
 tpr = dict()

@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 import torch
@@ -6,231 +5,174 @@ import random
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_curve, auc, confusion_matrix
+import matplotlib.pyplot as plt
 
-# Ustawienia
+# --- Ustawienia ---
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(device)
+print("Device:", device)
 batch_size = 128
 epochs = 100
 learning_rate = 1e-3
-latent_dim = 10  # wymiar przestrzeni latentnej
+latent_dim = 10
 
-
-# Załóżmy, że masz DataFrame df z danymi, np. taki jak wcześniej:
-# Kolumny: ['RBC', 'HGB', 'HCT', 'MCV', 'MCH', 'MCHC', 'RDW', 'PLT', 'WBC', 'Label']
-
-# Przykładowa symulacja danych (analogiczna do poprzedniego przykładu)
+# --- Funkcja symulująca dane ---
 def generate_group_data(label, n_samples=random.randint(27000, 33000)):
     if label == "Anemia Mikrocytarna":
-        RBC = np.random.normal(4.0, 0.5, n_samples)
-        HGB = np.random.normal(11.0, 1.0, n_samples)
-        HCT = np.random.normal(33.0, 2.0, n_samples)
-        MCV = np.random.normal(70.0, 5.0, n_samples)
-        MCH = np.random.normal(23.0, 2.0, n_samples)
-        MCHC = np.random.normal(32.0, 1.0, n_samples)
-        RDW = np.random.normal(15.0, 1.5, n_samples)
-        PLT = np.random.normal(300, 50, n_samples)
-        WBC = np.random.normal(7.0, 1.0, n_samples)
+        params = dict(RBC=(4.0,0.5), HGB=(11.0,1.0), HCT=(33.0,2.0),
+                      MCV=(70.0,5.0), MCH=(23.0,2.0), MCHC=(32.0,1.0),
+                      RDW=(15.0,1.5), PLT=(300,50), WBC=(7.0,1.0))
     elif label == "Anemia Makrocytarna":
-        RBC = np.random.normal(3.8, 0.5, n_samples)
-        HGB = np.random.normal(10.5, 1.0, n_samples)
-        HCT = np.random.normal(31.0, 2.0, n_samples)
-        MCV = np.random.normal(105.0, 10.0, n_samples)
-        MCH = np.random.normal(35.0, 3.0, n_samples)
-        MCHC = np.random.normal(33.0, 1.0, n_samples)
-        RDW = np.random.normal(16.0, 1.5, n_samples)
-        PLT = np.random.normal(200, 30, n_samples)
-        WBC = np.random.normal(7.0, 1.0, n_samples)
-    elif label == "Anemia Mikrocytarna":
-        RBC = np.random.normal(4.0, 0.5, n_samples)
-        HGB = np.random.normal(11.0, 1.0, n_samples)
-        HCT = np.random.normal(33.0, 2.0, n_samples)
-        MCV = np.random.normal(90.0, 5.0, n_samples)
-        MCH = np.random.normal(30.0, 2.0, n_samples)
-        MCHC = np.random.normal(33.0, 1.0, n_samples)
-        RDW = np.random.normal(15.0, 1.5, n_samples)
-        PLT = np.random.normal(250, 40, n_samples)
-        WBC = np.random.normal(8.0, 1.0, n_samples)
+        params = dict(RBC=(3.8,0.5), HGB=(10.5,1.0), HCT=(31.0,2.0),
+                      MCV=(105.0,10.0), MCH=(35.0,3.0), MCHC=(33.0,1.0),
+                      RDW=(16.0,1.5), PLT=(200,30), WBC=(7.0,1.0))
+    elif label == "Anemia Normocytarna":
+        params = dict(RBC=(4.0,0.5), HGB=(11.0,1.0), HCT=(33.0,2.0),
+                      MCV=(90.0,5.0), MCH=(30.0,2.0), MCHC=(33.0,1.0),
+                      RDW=(15.0,1.5), PLT=(250,40), WBC=(8.0,1.0))
     elif label == "Anemia Hemolityczna":
-        RBC = np.random.normal(3.2, 0.4, n_samples)
-        HGB = np.random.normal(9.5, 1.0, n_samples)
-        HCT = np.random.normal(28.0, 2.5, n_samples)
-        MCV = np.random.normal(88.0, 4.0, n_samples)
-        MCH = np.random.normal(29.5, 1.5, n_samples)
-        MCHC = np.random.normal(33.0, 1.0, n_samples)
-        RDW = np.random.normal(17.0, 2.0, n_samples)
-        PLT = np.random.normal(320, 60, n_samples)
-        WBC = np.random.normal(10.5, 1.5, n_samples)
+        params = dict(RBC=(3.2,0.4), HGB=(9.5,1.0), HCT=(28.0,2.5),
+                      MCV=(88.0,4.0), MCH=(29.5,1.5), MCHC=(33.0,1.0),
+                      RDW=(17.0,2.0), PLT=(320,60), WBC=(10.5,1.5))
     elif label == "Anemia Aplastyczna":
-        RBC = np.random.normal(2.8, 0.4, n_samples)  # znacznie obniżone
-        HGB = np.random.normal(8.5, 1.0, n_samples)  # obniżone
-        HCT = np.random.normal(26.0, 2.0, n_samples)  # obniżone
-        MCV = np.random.normal(92.0, 4.0, n_samples)  # N lub lekko ↑
-        MCH = np.random.normal(30.0, 1.5, n_samples)  # norma
-        MCHC = np.random.normal(33.0, 0.8, n_samples)  # norma
-        RDW = np.random.normal(14.5, 1.5, n_samples)  # N lub lekko ↑
-        PLT = np.random.normal(60, 20, n_samples)  # znacznie ↓
-        WBC = np.random.normal(2.5, 0.8, n_samples)
-    elif label == "Trombocytopenia":
-        RBC = np.random.normal(4.5, 0.4, n_samples)  # w normie
-        HGB = np.random.normal(13.0, 1.0, n_samples)  # w normie
-        HCT = np.random.normal(40.0, 2.5, n_samples)  # w normie
-        MCV = np.random.normal(88.0, 3.0, n_samples)  # norma
-        MCH = np.random.normal(29.5, 1.2, n_samples)  # norma
-        MCHC = np.random.normal(33.5, 0.7, n_samples)  # norma
-        RDW = np.random.normal(13.5, 1.0, n_samples)  # N lub lekko ↑
-        PLT = np.random.normal(70, 15, n_samples)  # znacznie obniżone
-        WBC = np.random.normal(6.5, 1.0, n_samples)  # w normie lub lekko ↑
-    else:
-        RBC = np.random.normal(5.0, 0.5, n_samples)  # liczba erytrocytów (typowy zakres ~4.5-5.9 x10^6/µl)
-        HGB = np.random.normal(16.0, 1.2,n_samples)  # hemoglobina (dla mężczyzn ~13.8-17.2 g/dl, dla kobiet ~12.1-15.1 g/dl)
-        HCT = np.random.normal(42.0, 2.0, n_samples)  # hematokryt (mężczyźni ~40-50%, kobiety ~36-44%)
-        MCV = np.random.normal(90.0, 5.0, n_samples)  # średnia objętość krwinki (80-100 fl)
-        MCH = np.random.normal(29.0, 2.0, n_samples)  # średnia masa hemoglobiny w krwince (27-33 pg)
-        MCHC = np.random.normal(34.0, 1.0, n_samples)  # średnie stężenie hemoglobiny (33-36 g/dl)
-        RDW = np.random.normal(13.5, 1.0, n_samples)  # wskaźnik zróżnicowania wielkości krwinek (11.5-14.5%)
-        PLT = np.random.normal(280, 40, n_samples)  # płytki krwi (150-450 x10^3/µl)
-        WBC = np.random.normal(7.0, 1.0, n_samples)
+        params = dict(RBC=(2.8,0.4), HGB=(8.5,1.0), HCT=(26.0,2.0),
+                      MCV=(92.0,4.0), MCH=(30.0,1.5), MCHC=(33.0,0.8),
+                      RDW=(14.5,1.5), PLT=(60,20), WBC=(2.5,0.8))
+    else:  # Healthy
+        params = dict(RBC=(5.0,0.5), HGB=(16.0,1.2), HCT=(42.0,2.0),
+                      MCV=(90.0,5.0), MCH=(29.0,2.0), MCHC=(34.0,1.0),
+                      RDW=(13.5,1.0), PLT=(280,40), WBC=(7.0,1.0))
+    data = {k: np.random.normal(mu, sd, n_samples) for k,(mu,sd) in params.items()}
+    data['Label'] = [label]*n_samples
+    return pd.DataFrame(data)
 
+# --- Generujemy dane i mieszamy ---
+groups = ["Anemia Mikrocytarna","Anemia Makrocytarna","Anemia Normocytarna",
+          "Anemia Hemolityczna","Anemia Aplastyczna","Healthy"]
+df = pd.concat([generate_group_data(g) for g in groups],
+               ignore_index=True).sample(frac=1, random_state=42).reset_index(drop=True)
 
-    df = pd.DataFrame({
-        'RBC': RBC,
-        'HGB': HGB,
-        'HCT': HCT,
-        'MCV': MCV,
-        'MCH': MCH,
-        'MCHC': MCHC,
-        'RDW': RDW,
-        'PLT': PLT,
-        'WBC': WBC,
-        'Label': [label] * n_samples
-    })
-    return df
-
-
-data_mikro = generate_group_data("Anemia Mikrocytarna")
-data_makro = generate_group_data("Anemia Makrocytarna")
-data_normo = generate_group_data("Anemia Normocytarna")
-data_hemo = generate_group_data("Anemia Hemolityczna")
-data_apla = generate_group_data("Anemia Aplastyczna")
-data_trombo = generate_group_data("Trombocytopenia")
-data_healthy = generate_group_data("Healthy")
-
-df = pd.concat([data_mikro, data_makro, data_normo,data_hemo,data_apla,data_trombo, data_healthy], ignore_index=True)
-df = df.sample(frac=1, random_state=42).reset_index(drop=True)
-
-# Przekształcamy kolumnę Label do postaci zmiennych zerojedynkowych (one-hot encoding)
-df_encoded = pd.get_dummies(df, columns=['Label'])
-# Znajdujemy początek kolumn etykiet (one-hot encoded labels)
-label_cols = [col for col in df_encoded.columns if "Label_" in col]  # Znajduje kolumny etykiet
-label_start_idx = df_encoded.columns.get_loc(label_cols[0])  # Pobiera indeks pierwszej etykiety
-
-print(f"Kolumny etykiet zaczynają się od indeksu: {label_start_idx}")
-print(f"Kolumny etykiet: {label_cols}")
-
-
-# Normalizacja danych numerycznych (opcjonalnie, ale pomocna przy trenowaniu VAE)
-numeric_cols = ['RBC', 'HGB', 'HCT', 'MCV', 'MCH', 'MCHC', 'RDW', 'PLT', 'WBC']
+# --- One-hot + normalizacja ---
+df_encoded = pd.get_dummies(df, columns=['Label']).astype('float32')
+label_cols = [c for c in df_encoded.columns if c.startswith('Label_')]
+label_start_idx = df_encoded.columns.get_loc(label_cols[0])
+numeric_cols = ['RBC','HGB','HCT','MCV','MCH','MCHC','RDW','PLT','WBC']
 df_encoded[numeric_cols] = (df_encoded[numeric_cols] - df_encoded[numeric_cols].mean()) / df_encoded[numeric_cols].std()
 
-# Konwersja wszystkich kolumn na typ float32
-df_encoded = df_encoded.astype('float32')
-
-# Przygotowujemy tensory
+# --- DataLoader dla VAE ---
 data_tensor = torch.tensor(df_encoded.values, dtype=torch.float32)
-
 dataset = TensorDataset(data_tensor)
-dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-
+loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 input_dim = df_encoded.shape[1]
 
-
-# Definicja modelu VAE
+# --- Definicja VAE ---
 class VAE(nn.Module):
     def __init__(self, input_dim, latent_dim):
-        super(VAE, self).__init__()
-        self.fc1 = nn.Linear(input_dim, 64)
-        self.fc2 = nn.Linear(64, 32)
-        self.fc31 = nn.Linear(32, latent_dim)  # średnia
-        self.fc32 = nn.Linear(32, latent_dim)  # logwariancja
-
-        self.fc4 = nn.Linear(latent_dim, 32)
-        self.fc5 = nn.Linear(32, 64)
-        self.fc6 = nn.Linear(64, input_dim)
-
+        super().__init__()
+        self.fc1 = nn.Linear(input_dim,64)
+        self.fc2 = nn.Linear(64,32)
+        self.fc31 = nn.Linear(32,latent_dim)
+        self.fc32 = nn.Linear(32,latent_dim)
+        self.fc4 = nn.Linear(latent_dim,32)
+        self.fc5 = nn.Linear(32,64)
+        self.fc6 = nn.Linear(64,input_dim)
         self.relu = nn.ReLU()
-
-    def encode(self, x):
+    def encode(self,x):
         h1 = self.relu(self.fc1(x))
         h2 = self.relu(self.fc2(h1))
         return self.fc31(h2), self.fc32(h2)
-
-    def reparameterize(self, mu, logvar):
-        std = torch.exp(0.5 * logvar)
+    def reparameterize(self,mu,logvar):
+        std = torch.exp(0.5*logvar)
         eps = torch.randn_like(std)
-        return mu + eps * std
-
-    def decode(self, z):
+        return mu + eps*std
+    def decode(self,z):
         h4 = self.relu(self.fc4(z))
         h5 = self.relu(self.fc5(h4))
-        output = self.fc6(h5)
-
-        output[:, label_start_idx:] = torch.sigmoid(output[:, label_start_idx:])  # Sigmoid dla etykiet
-        return output
-
-    def forward(self, x):
+        out = self.fc6(h5)
+        out[:, label_start_idx:] = torch.sigmoid(out[:, label_start_idx:])
+        return out
+    def forward(self,x):
         mu, logvar = self.encode(x)
         z = self.reparameterize(mu, logvar)
-        recon = self.decode(z)
-        return recon, mu, logvar
+        return self.decode(z), mu, logvar
 
+model = VAE(input_dim, latent_dim).to(device)
+opt = optim.Adam(model.parameters(), lr=learning_rate)
+mse_fn = nn.MSELoss(reduction='sum')
 
-model = VAE(input_dim=input_dim, latent_dim=latent_dim).to(device)
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-reconstruction_loss_fn = nn.MSELoss(reduction='sum')
+def loss_fn(recon, x, mu, logvar):
+    mse = mse_fn(recon[:,:label_start_idx], x[:,:label_start_idx])
+    bce = nn.BCEWithLogitsLoss()(recon[:,label_start_idx:], x[:,label_start_idx:])
+    kld = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    return mse + bce + kld
 
-
-# Funkcja utraty (loss) dla VAE
-def loss_function(recon_x, x, mu, logvar):
-    mse_loss = reconstruction_loss_fn(recon_x[:, :label_start_idx], x[:, :label_start_idx])  # MSE dla cech
-    bce_loss = nn.BCEWithLogitsLoss()(recon_x[:, label_start_idx:], x[:, label_start_idx:])  # BCE dla etykiet
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())  # KL divergence
-
-    return mse_loss + bce_loss + KLD
-
-
-# Trening modelu
+# --- Trening ---
 model.train()
-for epoch in range(1, epochs + 1):
-    train_loss = 0
-    for batch in dataloader:
-        data = batch[0].to(device)
-        optimizer.zero_grad()
-        recon_batch, mu, logvar = model(data)
-        loss = loss_function(recon_batch, data, mu, logvar)
+for epoch in range(1, epochs+1):
+    total = 0
+    for batch in loader:
+        x = batch[0].to(device)
+        opt.zero_grad()
+        recon, mu, logvar = model(x)
+        loss = loss_fn(recon, x, mu, logvar)
         loss.backward()
-        train_loss += loss.item()
-        optimizer.step()
+        opt.step()
+        total += loss.item()
     if epoch % 10 == 0:
-        print(f"Epoch {epoch}, Loss: {train_loss / len(dataset):.4f}")
+        print(f"Epoch {epoch:3d}  Avg Loss: {total/len(dataset):.4f}")
 
-# Generacja syntetycznych danych
+# --- Generacja (bez .numpy()) ---
 model.eval()
 with torch.no_grad():
-    # Generujemy tyle próbek, ile mamy oryginalnych
     z = torch.randn(len(dataset), latent_dim).to(device)
-    generated = model.decode(z).cpu().numpy()
+    gen_tensor = model.decode(z).cpu().detach()       # tensor bez numpy()
+    gen_list   = gen_tensor.tolist()                  # konwersja na listę Pythona
 
-# Odwracamy normalizację danych numerycznych
-df_generated = pd.DataFrame(generated, columns=df_encoded.columns)
+# Tworzymy DataFrame z listy
+df_generated = pd.DataFrame(gen_list, columns=df_encoded.columns)
+# Odwracanie normalizacji
 for col in numeric_cols:
-    mean = df[col].mean()
-    std = df[col].std()
-    df_generated[col] = df_generated[col] * std + mean
+    m, s = df[col].mean(), df[col].std()
+    df_generated[col] = df_generated[col]*s + m
+df_generated.to_csv("dane-anemia.csv", index=False)
+print("Zapisano syntetyczne dane w pliku dane-anemia.csv")
+# --- Ocena jakości ---
+X_real  = df[numeric_cols].values
+X_synth = df_generated[numeric_cols].values
+y_real  = np.zeros(len(X_real),  dtype=int)
+y_synth = np.ones(len(X_synth), dtype=int)
 
-print("Przykładowe wygenerowane dane:")
-print(df_generated.head())
-print(df_generated.columns)
-print(df_generated.shape)
-# Opcjonalnie: zapis do pliku CSV
-df_generated.to_csv("synthetic_data_vae2.csv", index=False)
+X = np.vstack([X_real, X_synth])
+y = np.concatenate([y_real, y_synth])
+
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, random_state=42)
+clf = LogisticRegression(max_iter=1000)
+clf.fit(X_tr, y_tr)
+proba = clf.predict_proba(X_te)[:,1]
+
+# ROC + AUC
+fpr, tpr, _ = roc_curve(y_te, proba)
+roc_auc = auc(fpr, tpr)
+plt.figure(); plt.plot(fpr,tpr,label=f'AUC={roc_auc:.2f}'); plt.plot([0,1],[0,1],'--')
+plt.xlabel('FPR'); plt.ylabel('TPR'); plt.title('ROC: Real vs Synthetic'); plt.legend(); plt.show()
+
+# Confusion Matrix
+y_pred = clf.predict(X_te)
+cm = confusion_matrix(y_te, y_pred)
+print("Confusion Matrix (rows=true, cols=pred):\n", cm)
+
+# Korelacje cech
+corr_real  = pd.DataFrame(X_real,  columns=numeric_cols).corr()
+corr_synt  = pd.DataFrame(X_synth, columns=numeric_cols).corr()
+
+plt.figure(); plt.imshow(corr_real, vmin=-1, vmax=1)
+plt.xticks(range(len(numeric_cols)), numeric_cols, rotation=90)
+plt.yticks(range(len(numeric_cols)), numeric_cols)
+plt.title('Correlation Matrix – REAL'); plt.colorbar(); plt.show()
+
+plt.figure(); plt.imshow(corr_synt, vmin=-1, vmax=1)
+plt.xticks(range(len(numeric_cols)), numeric_cols, rotation=90)
+plt.yticks(range(len(numeric_cols)), numeric_cols)
+plt.title('Correlation Matrix – SYNTHETIC'); plt.colorbar(); plt.show()
